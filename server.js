@@ -4,22 +4,30 @@
 const { execSync } = require('child_process')
 const path = require('path')
 
-var express     = require('express');
-var bodyParser  = require('body-parser');
-var expect      = require('chai').expect;
-var cors        = require('cors');
+var express = require('express');
+var bodyParser = require('body-parser');
+var expect = require('chai').expect;
+var cors = require('cors');
 
-var apiRoutes         = require('./routes/api.js');
-var fccTestingRoutes  = require('./routes/fcctesting.js');
-var runner            = require('./test-runner');
+var apiRoutes = require('./routes/api.js');
+var fccTestingRoutes = require('./routes/fcctesting.js');
+var runner = require('./test-runner');
 
 const helmet = require('helmet');
 
 var app = express();
 
+app.use(helmet());
+// 1. Only allow your site to be loading in an iFrame on your own pages: frameguard({ action: 'sameorigin'})
+// 2. Do not allow DNS prefetching: dnsPrefetchControl({ allow: false })
+// both are default helmet settings
+// 3. Only allow your site to send the referrer for your own pages:
+app.use(helmet.referrerPolicy({ policy: 'same-origin' })); // not default
+
+
 app.use('/public', express.static(process.cwd() + '/public'));
 
-app.use(cors({origin: '*'})); //For FCC testing purposes only
+app.use(cors({ origin: '*' })); //For FCC testing purposes only
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -72,9 +80,9 @@ apiRoutes(app);
 
 //Sample Front-end
 
-    
+
 //404 Not Found Middleware
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   res.status(404)
     .type('text')
     .send('Not Found');
