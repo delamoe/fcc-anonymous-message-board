@@ -16,6 +16,39 @@ const MONGODB_CONNECTION_STRING = process.env.DB;
 
 module.exports = function (app) {
 
+  app.route('/b/') // display all boards most recent first
+    .get(function (req, res) {
+      console.log('req.params: ', req.params);
+      console.log('req.query: ', req.query);
+      console.log('req.body: ', req.body);
+      MongoClient.connect(MONGODB_CONNECTION_STRING, { useUnifiedTopology: true }, function (err, db) {
+        if (err) return console.error(err);
+        var anonMessageBoard_db = req.query.test === 'true' ?
+          db.db('test').collection('anonMessageBoard_db_TEST') :
+          db.db('test').collection('anonMessageBoard_db');
+        anonMessageBoard_db.find({})
+          .project({ reported: 0, delete_password: 0 })
+          .sort({ bumped_on: -1 })
+          .limit(10)
+          .toArray().then(data => {
+            var threads = data.map(thread => {
+              return {
+                _id: thread._id,
+                board: thread.board,
+                text: thread.text,
+                created_on: thread.created_on,
+                bumped_on: thread.bumped_on,
+                replies: thread.replies.slice(0, 3),
+                replycount: thread.replies.length
+              };
+            });
+            console.log(threads);
+            res.json(threads);
+          });
+        db.close();
+      });
+    });
+
   app.route('/api/threads/:board/')
 
     // I can POST a thread to a specific message board by passing form data text and delete_password to /api/threads/{board}.(Recomend res.redirect to board page /b/{board}) Saved will be _id, text, created_on(date&time), bumped_on(date&time, starts same as created_on), reported(boolean), delete_password, & replies(array).
@@ -26,24 +59,24 @@ module.exports = function (app) {
       var created_on = new Date();
       MongoClient.connect(MONGODB_CONNECTION_STRING, { useUnifiedTopology: true }, function (err, db) {
         if (err) return console.error(err);
-        var anonMessageBoard_db = process.env.NODE_ENV === 'test' ?
+        var anonMessageBoard_db = req.query.test === 'true' ?
           db.db('test').collection('anonMessageBoard_db_TEST') :
           db.db('test').collection('anonMessageBoard_db');
-        anonMessageBoard_db.insertOne(
-          {
-            // _id: id,
-            board: req.params.board,
-            text: req.body.text,
-            created_on: created_on,
-            bumped_on: created_on,
-            reported: false,
-            delete_password: req.body.delete_password,
-            replies: []
-          }
-        ).then(data => {
-          // console.log(data);
-          res.redirect('/b/' + req.params.board + '/');
-        });
+        var thread = {
+          // _id: id,
+          board: req.params.board,
+          text: req.body.text,
+          created_on: created_on,
+          bumped_on: created_on,
+          reported: false,
+          delete_password: req.body.delete_password,
+          replies: []
+        };
+        anonMessageBoard_db.insertOne(thread)
+          .then(data => {
+            // console.log(data);
+            res.redirect('/b/' + req.params.board + '/');
+          });
         db.close();
       });
     })
@@ -55,7 +88,7 @@ module.exports = function (app) {
       // console.log('req.body: ', req.body);
       MongoClient.connect(MONGODB_CONNECTION_STRING, { useUnifiedTopology: true }, function (err, db) {
         if (err) return console.error(err);
-        var anonMessageBoard_db = process.env.NODE_ENV === 'test' ?
+        var anonMessageBoard_db = req.query.test === 'true' ?
           db.db('test').collection('anonMessageBoard_db_TEST') :
           db.db('test').collection('anonMessageBoard_db');
         anonMessageBoard_db.find(
@@ -90,7 +123,7 @@ module.exports = function (app) {
       // console.log('req.body: ', req.body);
       MongoClient.connect(MONGODB_CONNECTION_STRING, { useUnifiedTopology: true }, function (err, db) {
         if (err) return console.error(err);
-        var anonMessageBoard_db = process.env.NODE_ENV === 'test' ?
+        var anonMessageBoard_db = req.query.test === 'true' ?
           db.db('test').collection('anonMessageBoard_db_TEST') :
           db.db('test').collection('anonMessageBoard_db');
         anonMessageBoard_db.deleteOne(
@@ -114,7 +147,7 @@ module.exports = function (app) {
       // console.log('req.body: ', req.body);
       MongoClient.connect(MONGODB_CONNECTION_STRING, { useUnifiedTopology: true }, function (err, db) {
         if (err) return console.error(err);
-        var anonMessageBoard_db = process.env.NODE_ENV === 'test' ?
+        var anonMessageBoard_db = req.query.test === 'true' ?
           db.db('test').collection('anonMessageBoard_db_TEST') :
           db.db('test').collection('anonMessageBoard_db');
         anonMessageBoard_db.updateOne(
@@ -140,7 +173,7 @@ module.exports = function (app) {
       var bumped_on = new Date();
       MongoClient.connect(MONGODB_CONNECTION_STRING, { useUnifiedTopology: true }, function (err, db) {
         if (err) return console.error(err);
-        var anonMessageBoard_db = process.env.NODE_ENV === 'test' ?
+        var anonMessageBoard_db = req.query.test === 'true' ?
           db.db('test').collection('anonMessageBoard_db_TEST') :
           db.db('test').collection('anonMessageBoard_db');
         var reply = {
@@ -180,7 +213,7 @@ module.exports = function (app) {
       // console.log('req.body: ', req.body);
       MongoClient.connect(MONGODB_CONNECTION_STRING, { useUnifiedTopology: true }, function (err, db) {
         if (err) return console.error(err);
-        var anonMessageBoard_db = process.env.NODE_ENV === 'test' ?
+        var anonMessageBoard_db = req.query.test === 'true' ?
           db.db('test').collection('anonMessageBoard_db_TEST') :
           db.db('test').collection('anonMessageBoard_db');
         anonMessageBoard_db.findOne(
@@ -209,7 +242,7 @@ module.exports = function (app) {
       // console.log('req.body: ', req.body);
       MongoClient.connect(MONGODB_CONNECTION_STRING, { useUnifiedTopology: true }, function (err, db) {
         if (err) return console.error(err);
-        var anonMessageBoard_db = process.env.NODE_ENV === 'test' ?
+        var anonMessageBoard_db = req.query.test === 'true' ?
           db.db('test').collection('anonMessageBoard_db_TEST') :
           db.db('test').collection('anonMessageBoard_db');
         anonMessageBoard_db.updateOne(
@@ -235,7 +268,7 @@ module.exports = function (app) {
       // console.log('req.body: ', req.body);
       MongoClient.connect(MONGODB_CONNECTION_STRING, { useUnifiedTopology: true }, function (err, db) {
         if (err) return console.error(err);
-        var anonMessageBoard_db = process.env.NODE_ENV === 'test' ?
+        var anonMessageBoard_db = req.query.test === 'true' ?
           db.db('test').collection('anonMessageBoard_db_TEST') :
           db.db('test').collection('anonMessageBoard_db');
         anonMessageBoard_db.updateOne(

@@ -28,7 +28,8 @@
         currentURL = currentURL.split('/');
         
         var url = "/api/replies/"+currentURL[0];
-        $('#threadTitle').text(window.location.pathname);
+        $('#threadTitle').text(window.location.pathname
+        .replace(/%20/g,' '));
         $.ajax({
           type: "GET",
           url: url,
