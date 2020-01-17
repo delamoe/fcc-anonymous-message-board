@@ -88,8 +88,6 @@ module.exports = function (app) {
       // console.log('req.params: ', req.params);
       // console.log('req.query: ', req.query);
       // console.log('req.body: ', req.body);
-      console.log('req.params: ', req.params);
-      console.log('req.body: ', req.body);
       MongoClient.connect(MONGODB_CONNECTION_STRING, { useUnifiedTopology: true }, function (err, db) {
         if (err) return console.error(err);
         var anonMessageBoard_db = process.env.NODE_ENV === 'test' ?
@@ -101,7 +99,7 @@ module.exports = function (app) {
             delete_password: req.body.delete_password
           })
           .then(data => {
-            console.log(data.deletedCount);
+            // console.log(data.deletedCount);
             var message = data.deletedCount > 0 ? 'success' : 'incorrect password';
             res.send(message);
           });
@@ -139,8 +137,6 @@ module.exports = function (app) {
       // console.log('req.params: ', req.params);
       // console.log('req.query: ', req.query);
       // console.log('req.body: ', req.body);
-      console.log('req.params: ', req.params);
-      console.log('req.body: ', req.body);
       var bumped_on = new Date();
       MongoClient.connect(MONGODB_CONNECTION_STRING, { useUnifiedTopology: true }, function (err, db) {
         if (err) return console.error(err);
@@ -156,9 +152,21 @@ module.exports = function (app) {
         };
         anonMessageBoard_db.updateOne(
           { _id: ObjectId(req.body.thread_id) },
-          { $set: { bumped_on: bumped_on }, $push: { replies: reply } }
+          {
+            $set: {
+              bumped_on: bumped_on
+            },
+            $push: {
+              replies: {
+                $each: [reply],
+                $sort: {
+                  created_on: -1
+                }
+              }
+            }
+          }
         ).then(data => {
-          console.log(data.modifiedCount);
+          // console.log(data.modifiedCount);
           res.redirect('/b/' + req.params.board + '/' + req.body.thread_id + '/');
         });
         db.close();
@@ -196,9 +204,9 @@ module.exports = function (app) {
 
     // I can delete a post(just changing the text to '[deleted]') if I send a DELETE request to /api/replies/{board} and pass along the thread_id, reply_id, & delete_password. (Text response will be 'incorrect password' or 'success')
     .delete(function (req, res) {
-      console.log('req.params: ', req.params);
-      console.log('req.query: ', req.query);
-      console.log('req.body: ', req.body);
+      // console.log('req.params: ', req.params);
+      // console.log('req.query: ', req.query);
+      // console.log('req.body: ', req.body);
       MongoClient.connect(MONGODB_CONNECTION_STRING, { useUnifiedTopology: true }, function (err, db) {
         if (err) return console.error(err);
         var anonMessageBoard_db = process.env.NODE_ENV === 'test' ?
@@ -238,7 +246,7 @@ module.exports = function (app) {
           { $set: { "replies.$.reported": true } }
         )
           .then(data => {
-            console.log(data.modifiedCount);
+            // console.log(data.modifiedCount);
             var message = data.modifiedCount > 0 ? 'success' : 'error';
             res.send(message);
           });
