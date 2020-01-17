@@ -62,7 +62,7 @@ module.exports = function (app) {
           { board: req.params.board }
         )
           .project({ reported: 0, delete_password: 0 })
-          .sort({ bumped_on: 1 })
+          .sort({ bumped_on: -1 })
           .limit(10)
           .toArray().then(data => {
             var threads = data.map(thread => {
