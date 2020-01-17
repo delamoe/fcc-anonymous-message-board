@@ -72,7 +72,7 @@ module.exports = function (app) {
                 text: thread.text,
                 created_on: thread.created_on,
                 bumped_on: thread.bumped_on,
-                replies: thread.replies.slice(0, 2),
+                replies: thread.replies.slice(0, 3),
                 replycount: thread.replies.length
               };
             });
