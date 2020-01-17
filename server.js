@@ -22,8 +22,7 @@ app.use(helmet());
 // 2. Do not allow DNS prefetching: dnsPrefetchControl({ allow: false })
 // both are default helmet settings
 // 3. Only allow your site to send the referrer for your own pages:
-app.use(helmet.referrerPolicy({ policy: 'same-origin' })); // not default
-
+app.use(helmet.referrerPolicy({ policy: 'same-origin' })); // not default helmet config
 
 app.use('/public', express.static(process.cwd() + '/public'));
 
@@ -53,7 +52,8 @@ app.post('/deploy', (request, response) => {
   ).toString()
   console.log(output)
   response.status(200).send()
-})
+});
+
 // **************************************************
 
 //Sample front-end
