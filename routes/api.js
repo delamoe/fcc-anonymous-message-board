@@ -14,6 +14,18 @@ var ObjectId = require('mongodb').ObjectId;
 
 const MONGODB_CONNECTION_STRING = process.env.DB;
 
+// delete all items in anonMessageBoard_db_TEST
+MongoClient.connect(MONGODB_CONNECTION_STRING, { useUnifiedTopology: true }, function (err, db) {
+  if (err) return console.error(err);
+  var anonMessageBoard_db = db.db('test').collection('anonMessageBoard_db_TEST');
+  anonMessageBoard_db.deleteMany({})
+    /* .toArray() */.then(data => {
+      console.log(data.deletedCount);/* 
+      res.json(data); */
+    });
+  db.close();
+});
+
 module.exports = function (app) {
 
   app.route('/b/') // display all boards most recent first
@@ -56,6 +68,7 @@ module.exports = function (app) {
       // console.log('req.params: ', req.params);
       // console.log('req.query: ', req.query);
       // console.log('req.body: ', req.body);
+      // var _id = req.body._id || null;
       var created_on = new Date();
       MongoClient.connect(MONGODB_CONNECTION_STRING, { useUnifiedTopology: true }, function (err, db) {
         if (err) return console.error(err);
@@ -63,7 +76,7 @@ module.exports = function (app) {
           db.db('test').collection('anonMessageBoard_db_TEST') :
           db.db('test').collection('anonMessageBoard_db');
         var thread = {
-          // _id: id,
+          _id: ObjectId(req.body._id) || null,
           board: req.params.board,
           text: req.body.text,
           created_on: created_on,
@@ -177,7 +190,7 @@ module.exports = function (app) {
           db.db('test').collection('anonMessageBoard_db_TEST') :
           db.db('test').collection('anonMessageBoard_db');
         var reply = {
-          _id: ObjectId(),
+          _id: (req.body.reply_id) ? ObjectId(req.body.reply_id) : ObjectId(),
           text: req.body.text,
           created_on: bumped_on,
           delete_password: req.body.delete_password,
